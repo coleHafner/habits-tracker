@@ -50,11 +50,7 @@ def getTimeOfDay(time):
     else:
         return 'unknown-' + t
 
-if len(sys.argv) < 2:
-    red('filename required!')
-    sys.exit()
-
-filename = sys.argv[1]
+filename = './habits.csv'
 print "reading the file...", filename
 
 file = open(filename, 'r')
@@ -142,16 +138,6 @@ prettyMonths = {
     12: 'dec'
 }
 
-prettyDays = {
-    1: 'mon',
-    2: 'tues',
-    3: 'wed',
-    4: 'thurs',
-    5: 'fri',
-    6: 'sat',
-    7: 'sun'
-}
-
 days = [
     'mon',
     'tues',
@@ -167,7 +153,7 @@ for habit in counts:
     print "\n\n", habit
 
     # AVG
-    print delim, "avg: once every", (daysSoFar/counts[habit]['total']), "days"
+    print delim, "avg: once every", (round((daysSoFar * 1.0)/counts[habit]['total'], 2)), "days"
 
     # TOTAL
     print delim, "total: ", counts[habit]['total']
