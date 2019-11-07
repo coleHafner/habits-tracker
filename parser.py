@@ -1,13 +1,11 @@
 import sys
 from datetime import date
+from termcolor import cprint, colored
 
 daysKey = 'days'
-monthsKey = 'months'
 timeKey = 'time'
-
-def red(str):
-    print "\033[1;31;40m", str
-    return;
+monthsKey = 'months'
+exerciseKey = 'Exercise'
 
 def newCounter():
     return {'total': 0, daysKey: {}, monthsKey: {}, timeKey: {}}
@@ -50,14 +48,19 @@ def getTimeOfDay(time):
     else:
         return 'unknown-' + t
 
+def header(title):
+    cprint(("\n" + title).upper(), 'red')
+
+def debug(msg):
+    cprint(msg, 'yellow')
+
 filename = './habits.csv'
-print "reading the file...", filename
+debug("reading the file '" + filename + "'")
 
 file = open(filename, 'r')
 lines = file.readlines()
 
 onFirstLine = True;
-exerciseKey = 'Exercise'
 counts = {exerciseKey: newCounter()}
 exercises = ['Basketball', 'Hiking', 'Run', 'Bike']
 ignore = ['Trimmed nails', 'SA']
@@ -118,10 +121,7 @@ for line in lines:
     if (timeOfDay not in counts[selectedKey][timeKey]):
         counts[selectedKey][timeKey][timeOfDay] = 0;
 
-    counts[selectedKey][timeKey][timeOfDay] += 1;
-
-delim = "   "
-print totalRecords, "records read..."
+    counts[selectedKey][timeKey][timeOfDay] += 1
 
 prettyMonths = {
     1: 'jan',
@@ -148,43 +148,45 @@ days = [
     'sun'
 ]
 
+delim = "   "
+separator = ":"
+
 for habit in counts:
     # HEADER
-    print "\n\n", habit
-
-    # AVG
-    print delim, "avg: once every", (round((daysSoFar * 1.0)/counts[habit]['total'], 2)), "days"
-
-    # TOTAL
-    print delim, "total: ", counts[habit]['total']
+    avg = round((daysSoFar * 1.0)/counts[habit]['total'], 2)
+    cprint("\n\n" + delim + habit + separator + " You have done this " + str(counts[habit]['total']) + " times this year. That's once every " + str(avg) + " days.\n", 'grey', 'on_white', attrs=['bold'])
 
     # TIME OF DAY
-    print delim, "time-of-day: "
+    header('time of day')
 
     for tod in ['morning', 'mid-day', 'afternoon', 'night', 'late-night']:
         todCount = 0
         if tod in counts[habit][timeKey]:
             todCount = counts[habit][timeKey][tod]
 
-        print delim, delim, tod, ":", todCount
+        print tod + separator, todCount
 
 
     # DAY
-    print delim, "days: "
+    header('days')
 
     for day in days:
         dayCount = 0
         if day in counts[habit][daysKey]:
             dayCount = counts[habit][daysKey][day]
 
-        print delim, delim, day, ":", dayCount
+        print day + separator, dayCount
 
     # MONTH
-    print delim, "months: "
+    header('months')
 
     for monthNum in range(1,13):
         monthCount = 0
         if (str(monthNum) in counts[habit][monthsKey]):
             monthCount = counts[habit][monthsKey][str(monthNum)]
 
-        print delim, delim, prettyMonths[monthNum], ":", monthCount
+        print prettyMonths[monthNum] + separator, monthCount
+
+debug("\ntotal records: " + separator + " " + str(totalRecords))
+debug("total days in year" + separator + " " + str(daysSoFar))
+debug("file parsed" + separator + " " + filename + "\n")
