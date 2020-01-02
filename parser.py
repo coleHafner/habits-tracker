@@ -1,4 +1,6 @@
 import sys
+import re
+
 from datetime import date
 from termcolor import cprint, colored
 
@@ -62,7 +64,7 @@ lines = file.readlines()
 
 onFirstLine = True;
 counts = {exerciseKey: newCounter()}
-exercises = ['Basketball', 'Hiking', 'Run', 'Bike']
+exercises = ['Basketball', 'Hiking', 'Bike', 'ST', 'ST-DVD']
 ignore = ['Trimmed nails', 'SA']
 
 start = date(2019, 1, 1)
@@ -70,6 +72,9 @@ end = date.today()
 diff = end - start
 daysSoFar = diff.days
 totalRecords = 0
+totalMiles = 0
+totalRuns = 0
+milesRegex = re.compile('\d+\.?(\d+)?')
 
 for line in lines:
     if onFirstLine:
@@ -85,7 +90,7 @@ for line in lines:
     time = dayAndTimeParts[1]
 
     habit = parts[2].strip()
-    notes = parts[3]
+    notes = parts[3].strip()
 
     dateParts = date.split('/')
     month = dateParts[0]
@@ -103,6 +108,13 @@ for line in lines:
 
     if (habit in exercises):
         selectedKey = exerciseKey
+
+    if habit.lower() == 'run':
+        matches = milesRegex.match(notes)
+        totalRuns += 1
+
+        if matches != None:
+            totalMiles += float(matches.group())
 
     counts[selectedKey]['total'] += 1
 
@@ -187,6 +199,7 @@ for habit in counts:
 
         print prettyMonths[monthNum] + separator, monthCount
 
+debug("\ntotal miles: " + separator + " " + str(totalMiles) + " in " + str(totalRuns) + " runs")
 debug("\ntotal records: " + separator + " " + str(totalRecords))
 debug("total days in year" + separator + " " + str(daysSoFar))
 debug("file parsed" + separator + " " + filename + "\n")
