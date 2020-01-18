@@ -7,10 +7,21 @@ from termcolor import cprint, colored
 daysKey = 'days'
 timeKey = 'time'
 monthsKey = 'months'
-exerciseKey = 'Exercise'
+subsKey = 'subs'
+totalsKey = 'total'
+deetsKey = 'deets'
 
-def newCounter():
-    return {'total': 0, daysKey: {}, monthsKey: {}, timeKey: {}}
+def newCounter(habit):
+    counter = {'total': 0, daysKey: {}, monthsKey: {}, timeKey: {}, subsKey: {}, deetsKey: {}}
+
+    if habit === 'EX':
+        counter[deetsKey] = {
+            miles: 0,
+            time: 0,
+            avg: 0
+        }
+
+    return counter
 
 def cleanDay(day):
     day = day.lower()
@@ -56,18 +67,16 @@ def header(title):
 def debug(msg):
     cprint(msg, 'yellow')
 
-filename = './habits.csv'
+filename = './habits-2020.csv'
 debug("reading the file '" + filename + "'")
 
 file = open(filename, 'r')
 lines = file.readlines()
 
 onFirstLine = True;
-counts = {exerciseKey: newCounter()}
-exercises = ['Basketball', 'Hiking', 'Bike', 'ST', 'ST-DVD']
-ignore = ['Trimmed nails', 'SA']
+counts = {}
 
-start = date(2019, 1, 1)
+start = date(2020, 1, 1)
 end = date.today()
 diff = end - start
 daysSoFar = diff.days
@@ -84,56 +93,52 @@ for line in lines:
     parts = line.split(',')
     date = parts[0]
     dayAndTime = parts[1]
+    habit = parts[2].strip()
+    sub = parts[3].strip()
+    notes2 = parts[4].strip()
+    notes3 = parts[5].strip()
+    notes4 = parts[6].strip()
     
     dayAndTimeParts = dayAndTime.split(' ');
     day = cleanDay(dayAndTimeParts[0])
     time = dayAndTimeParts[1]
 
-    habit = parts[2].strip()
-    notes = parts[3].strip()
-
     dateParts = date.split('/')
     month = dateParts[0]
-
-    if habit in ignore:
-        continue
-
-    totalRecords +=1
+    totalRecords += 1
     # print "DATE: ", parts[0], " DAY/TIME: ", parts[1], " THING: ", parts[2], " NOTES: ", parts[3]
     
-    if habit not in counts and habit not in exercises:
-        counts[habit] = newCounter()
+    if habit not in counts:
+        counts[habit] = newCounter(habit)
 
-    selectedKey = habit;
+    if habit != 'S':
+        if sub not in counts[habit][subsKey]:
+            counts[habit][subsKey][sub] = {totalsKey: 0};
 
-    if (habit in exercises):
-        selectedKey = exerciseKey
+        counts[habit][subsKey][sub][totalsKey] += 1
 
-    if habit.lower() == 'run':
-        matches = milesRegex.match(notes)
-        totalRuns += 1
+    if sub in ['RUN-IN', 'RUN-OUT']
+        counts[habit][deetsKey]['miles'] += notes2
+        counts[habit][deetsKey]['time'] += notes3
 
-        if matches != None:
-            totalMiles += float(matches.group())
+    counts[habit][totalsKey] += 1
 
-    counts[selectedKey]['total'] += 1
-
-    if (day not in counts[selectedKey][daysKey]):
-        counts[selectedKey][daysKey][day] = 0
+    if (day not in counts[habit][daysKey]):
+        counts[habit][daysKey][day] = 0
         
-    counts[selectedKey][daysKey][day] += 1
+    counts[habit][daysKey][day] += 1
 
-    if (month not in counts[selectedKey]['months']):
-        counts[selectedKey][monthsKey][month] = 0
+    if (month not in counts[habit]['months']):
+        counts[habit][monthsKey][month] = 0
 
-    counts[selectedKey][monthsKey][month] += 1
+    counts[habit][monthsKey][month] += 1
 
     timeOfDay = getTimeOfDay(time)
 
-    if (timeOfDay not in counts[selectedKey][timeKey]):
-        counts[selectedKey][timeKey][timeOfDay] = 0;
+    if (timeOfDay not in counts[habit][timeKey]):
+        counts[habit][timeKey][timeOfDay] = 0;
 
-    counts[selectedKey][timeKey][timeOfDay] += 1
+    counts[habit][timeKey][timeOfDay] += 1
 
 prettyMonths = {
     1: 'jan',
@@ -165,7 +170,7 @@ separator = ":"
 
 for habit in counts:
     # HEADER
-    avg = round((daysSoFar * 1.0)/counts[habit]['total'], 2)
+    avg = round((daysSoFar * 1.0)/counts[habit][totalsKey], 2)
     cprint("\n\n" + delim + habit + separator + " You have done this " + str(counts[habit]['total']) + " times this year. That's once every " + str(avg) + " days.\n", 'grey', 'on_white', attrs=['bold'])
 
     # TIME OF DAY
@@ -199,7 +204,11 @@ for habit in counts:
 
         print prettyMonths[monthNum] + separator, monthCount
 
-debug("\ntotal miles: " + separator + " " + str(totalMiles) + " in " + str(totalRuns) + " runs")
-debug("\ntotal records: " + separator + " " + str(totalRecords))
+    # SUBS
+    header('subs')
+
+    for sub in counts[habit][subsKey]:
+        print sub + ': ' + str(counts[habit][subsKey][sub][totalsKey])
+
 debug("total days in year" + separator + " " + str(daysSoFar))
 debug("file parsed" + separator + " " + filename + "\n")
