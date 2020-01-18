@@ -14,12 +14,16 @@ deetsKey = 'deets'
 def newCounter(habit):
     counter = {'total': 0, daysKey: {}, monthsKey: {}, timeKey: {}, subsKey: {}, deetsKey: {}}
 
-    if habit === 'EX':
+    if habit == 'EX':
         counter[deetsKey] = {
-            miles: 0,
-            time: 0,
-            avg: 0
+            'miles': 0,
+            'time': 0,
+            'avg-miles-per-run': 0,
+            'avg-mile': 0,
+            'runs': 0
         }
+    elif habit == 'EAT':
+        counter[deetsKey] = {'cost': 0}
 
     return counter
 
@@ -117,25 +121,42 @@ for line in lines:
 
         counts[habit][subsKey][sub][totalsKey] += 1
 
-    if sub in ['RUN-IN', 'RUN-OUT']
-        counts[habit][deetsKey]['miles'] += notes2
-        counts[habit][deetsKey]['time'] += notes3
+    if habit == 'EAT':
+        counts[habit][deetsKey]['cost'] += int(notes3)
+
+    if sub in ['RUN-IN', 'RUN-OUT']:
+        matches = milesRegex.match(notes2)
+
+        if matches != None:
+            split = notes3.split(':')
+            hours = int(split[0])
+            mins = int(split[1])
+            secs = int(split[2])
+            counts[habit][deetsKey]['miles'] += float(matches.group())
+            counts[habit][deetsKey]['time'] += (hours * 360) + (mins * 60) + secs
+            counts[habit][deetsKey]['runs'] += 1
+
+            avg = float(counts[habit][deetsKey]['time'])/float(counts[habit][deetsKey]['miles'])
+            counts[habit][deetsKey]['avg-mile'] = round(avg/float(60), 2) # str(wholeMins) + ':' + str(partMins * 60)
+            
+            avgMilesPerRun = float(counts[habit][deetsKey]['miles'])/float(counts[habit][deetsKey]['runs'])
+            counts[habit][deetsKey]['avg-miles-per-run'] = round(avgMilesPerRun, 2) # str(wholeMins) + ':' + str(partMins * 60)
 
     counts[habit][totalsKey] += 1
 
-    if (day not in counts[habit][daysKey]):
+    if day not in counts[habit][daysKey]:
         counts[habit][daysKey][day] = 0
         
     counts[habit][daysKey][day] += 1
 
-    if (month not in counts[habit]['months']):
+    if month not in counts[habit]['months']:
         counts[habit][monthsKey][month] = 0
 
     counts[habit][monthsKey][month] += 1
 
     timeOfDay = getTimeOfDay(time)
 
-    if (timeOfDay not in counts[habit][timeKey]):
+    if timeOfDay not in counts[habit][timeKey]:
         counts[habit][timeKey][timeOfDay] = 0;
 
     counts[habit][timeKey][timeOfDay] += 1
@@ -173,6 +194,18 @@ for habit in counts:
     avg = round((daysSoFar * 1.0)/counts[habit][totalsKey], 2)
     cprint("\n\n" + delim + habit + separator + " You have done this " + str(counts[habit]['total']) + " times this year. That's once every " + str(avg) + " days.\n", 'grey', 'on_white', attrs=['bold'])
 
+    # SUBS
+    header('subs')
+
+    for sub in counts[habit][subsKey]:
+        print sub + ': ' + str(counts[habit][subsKey][sub][totalsKey])
+
+    # DEETS
+    header('deets')
+
+    for deet in counts[habit][deetsKey]:
+        print deet + ': ' + str(counts[habit][deetsKey][deet])
+
     # TIME OF DAY
     header('time of day')
 
@@ -203,12 +236,6 @@ for habit in counts:
             monthCount = counts[habit][monthsKey][str(monthNum)]
 
         print prettyMonths[monthNum] + separator, monthCount
-
-    # SUBS
-    header('subs')
-
-    for sub in counts[habit][subsKey]:
-        print sub + ': ' + str(counts[habit][subsKey][sub][totalsKey])
 
 debug("total days in year" + separator + " " + str(daysSoFar))
 debug("file parsed" + separator + " " + filename + "\n")
