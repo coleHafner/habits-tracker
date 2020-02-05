@@ -23,7 +23,7 @@ def newCounter(habit):
             'runs': 0
         }
     elif habit == 'EAT':
-        counter[deetsKey] = {'cost': 0}
+      counter[deetsKey] = {'cost': 0, 'avg': 0}
 
     return counter
 
@@ -88,6 +88,7 @@ totalRecords = 0
 totalMiles = 0
 totalRuns = 0
 milesRegex = re.compile('\d+\.?(\d+)?')
+intxTypeRegex = re.compile('^(\d)(.+)?')
 
 for line in lines:
     if onFirstLine:
@@ -115,6 +116,8 @@ for line in lines:
     if habit not in counts:
         counts[habit] = newCounter(habit)
 
+    counts[habit][totalsKey] += 1
+
     if habit != 'S':
         if sub not in counts[habit][subsKey]:
             counts[habit][subsKey][sub] = {totalsKey: 0};
@@ -123,6 +126,20 @@ for line in lines:
 
     if habit == 'EAT':
         counts[habit][deetsKey]['cost'] += int(notes3)
+        counts[habit][deetsKey]['avg'] = round(counts[habit][deetsKey]['cost']/counts[habit][totalsKey], 2)
+
+    if habit == 'INTX':
+        split = notes2.split('/');
+        for intxType in split:
+            matches = intxTypeRegex.match(intxType)
+            if matches != None:
+                num = int(matches.group(1))
+                substance = matches.group(2)
+
+                if substance not in counts[habit][deetsKey]:
+                  counts[habit][deetsKey][substance] = 0
+
+                counts[habit][deetsKey][substance] += num
 
     if sub in ['RUN-IN', 'RUN-OUT']:
         matches = milesRegex.match(notes2)
@@ -142,7 +159,11 @@ for line in lines:
             avgMilesPerRun = float(counts[habit][deetsKey]['miles'])/float(counts[habit][deetsKey]['runs'])
             counts[habit][deetsKey]['avg-miles-per-run'] = round(avgMilesPerRun, 2) # str(wholeMins) + ':' + str(partMins * 60)
 
-    counts[habit][totalsKey] += 1
+    if habit == 'M' and sub == 'PRN':
+      if notes3 not in counts[habit][deetsKey]:
+        counts[habit][deetsKey][notes3] = 0
+
+      counts[habit][deetsKey][notes3] += 1
 
     if day not in counts[habit][daysKey]:
         counts[habit][daysKey][day] = 0
