@@ -1,5 +1,6 @@
 import sys
 import re
+import math
 
 from datetime import date
 from termcolor import cprint, colored
@@ -153,8 +154,12 @@ for line in lines:
             counts[habit][deetsKey]['time'] += (hours * 360) + (mins * 60) + secs
             counts[habit][deetsKey]['runs'] += 1
 
-            avg = float(counts[habit][deetsKey]['time'])/float(counts[habit][deetsKey]['miles'])
-            counts[habit][deetsKey]['avg-mile'] = round(avg/float(60), 2) # str(wholeMins) + ':' + str(partMins * 60)
+            secondsPerMile = float(counts[habit][deetsKey]['time'])/float(counts[habit][deetsKey]['miles'])
+            minsPerMile = round(secondsPerMile/float(60), 2)
+            avgMileSplit = str(minsPerMile).split('.')
+            wholeMinsPerMile = avgMileSplit[0]
+            wholeSecondsPerMile = str(int(math.ceil(float('.' + avgMileSplit[1]) * 60))).zfill(2)
+            counts[habit][deetsKey]['avg-mile'] =  wholeMinsPerMile + ':' + wholeSecondsPerMile # str(wholeMins) + ':' + str(partMins * 60)
             
             avgMilesPerRun = float(counts[habit][deetsKey]['miles'])/float(counts[habit][deetsKey]['runs'])
             counts[habit][deetsKey]['avg-miles-per-run'] = round(avgMilesPerRun, 2) # str(wholeMins) + ':' + str(partMins * 60)
@@ -230,7 +235,7 @@ for habit in counts:
     # TIME OF DAY
     header('time of day')
 
-    for tod in ['morning', 'mid-day', 'afternoon', 'night', 'late-night']:
+    for tod in ['morning', 'mid-day', 'afternoon', 'evening', 'night', 'late-night']:
         todCount = 0
         if tod in counts[habit][timeKey]:
             todCount = counts[habit][timeKey][tod]
