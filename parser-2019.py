@@ -68,7 +68,7 @@ exercises = ['Basketball', 'Hiking', 'Bike', 'ST', 'ST-DVD']
 ignore = ['Trimmed nails', 'SA']
 
 start = date(2019, 1, 1)
-end = date.today()
+end = date(2019, 12, 31);
 diff = end - start
 daysSoFar = diff.days
 totalRecords = 0
