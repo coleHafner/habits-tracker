@@ -3,6 +3,7 @@ import re
 import math
 
 from datetime import date
+from datetime import datetime
 from termcolor import cprint, colored
 
 daysKey = 'days'
@@ -24,7 +25,7 @@ def newCounter(habit):
             'runs': 0
         }
     elif habit == 'EAT':
-      counter[deetsKey] = {'cost': 0, 'avg': 0}
+      counter[deetsKey] = {'cost': 0, 'avg': 0, 'avg-per-month': 0}
 
     return counter
 
@@ -214,6 +215,9 @@ days = [
 
 delim = "   "
 separator = ":"
+
+# calc avg spent on eating out per month
+counts['EAT'][deetsKey]['avg-per-month'] = counts['EAT'][deetsKey]['cost']/datetime.today().month;
 
 for habit in counts:
     # HEADER
