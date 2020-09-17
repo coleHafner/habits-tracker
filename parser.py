@@ -13,16 +13,34 @@ subsKey = 'subs'
 totalsKey = 'total'
 deetsKey = 'deets'
 
+def calcTime(totalSecs):
+    hours = totalSecs/3600
+    mins = (totalSecs - (hours * 3600))/60
+    secs = totalSecs - (hours * 3600) - (mins * 60)
+    return ' A Total of: ' + str(hours) + 'h ' + str(mins) + 'm ' + str(secs) + 's (' + str(totalSecs) + ' total seconds)'
+
 def newCounter(habit):
     counter = {'total': 0, daysKey: {}, monthsKey: {}, timeKey: {}, subsKey: {}, deetsKey: {}}
 
     if habit == 'EX':
         counter[deetsKey] = {
-            'miles': 0,
-            'time': 0,
-            'avg-miles-per-run': 0,
-            'avg-mile': 0,
-            'runs': 0
+            'runs': {
+                'total': 0,
+                'time': 0,
+                'miles': 0,
+                'avg-miles-per-run': 0,
+                'avg-mile': 0
+            },
+            'training': {
+                'total': 0,
+                'time': 0,
+                'push-ups': 0,
+                'crunches': 0,
+                'lunges': 0,
+                'planks': 0,
+                'chin-ups': 0,
+                'curls': 0
+            }
         }
     elif habit == 'EAT':
       counter[deetsKey] = {'cost': 0, 'avg': 0, 'avg-per-month': 0}
@@ -151,25 +169,57 @@ for line in lines:
             hours = int(split[0])
             mins = int(split[1])
             secs = int(split[2])
-            counts[habit][deetsKey]['miles'] += float(matches.group())
-            counts[habit][deetsKey]['time'] += (hours * 360) + (mins * 60) + secs
-            counts[habit][deetsKey]['runs'] += 1
+            counts[habit][deetsKey]['runs']['total'] += 1
+            counts[habit][deetsKey]['runs']['time'] += (hours * 360) + (mins * 60) + secs
+            counts[habit][deetsKey]['runs']['miles'] += float(matches.group())
 
-            secondsPerMile = float(counts[habit][deetsKey]['time'])/float(counts[habit][deetsKey]['miles'])
+            secondsPerMile = float(counts[habit][deetsKey]['runs']['time'])/float(counts[habit][deetsKey]['runs']['miles'])
             minsPerMile = round(secondsPerMile/float(60), 2)
             avgMileSplit = str(minsPerMile).split('.')
             wholeMinsPerMile = avgMileSplit[0]
             wholeSecondsPerMile = str(int(math.ceil(float('.' + avgMileSplit[1]) * 60))).zfill(2)
-            counts[habit][deetsKey]['avg-mile'] =  wholeMinsPerMile + ':' + wholeSecondsPerMile # str(wholeMins) + ':' + str(partMins * 60)
+            counts[habit][deetsKey]['runs']['avg-mile'] =  wholeMinsPerMile + ':' + wholeSecondsPerMile # str(wholeMins) + ':' + str(partMins * 60)
             
-            avgMilesPerRun = float(counts[habit][deetsKey]['miles'])/float(counts[habit][deetsKey]['runs'])
-            counts[habit][deetsKey]['avg-miles-per-run'] = round(avgMilesPerRun, 2) # str(wholeMins) + ':' + str(partMins * 60)
+            avgMilesPerRun = float(counts[habit][deetsKey]['runs']['miles'])/float(counts[habit][deetsKey]['runs']['total'])
+            counts[habit][deetsKey]['runs']['avg-miles-per-run'] = round(avgMilesPerRun, 2) # str(wholeMins) + ':' + str(partMins * 60)
 
-    if habit == 'M' and sub == 'PRN':
-      if notes3 not in counts[habit][deetsKey]:
-        counts[habit][deetsKey][notes3] = 0
+    if sub == 'ST':
+        counts[habit][deetsKey]['training']['total'] += 1;
+        counts[habit][deetsKey]['training']['time'] += int(notes3.split('min')[0]) * 60
+        exercises = notes2.split('/')
 
-      counts[habit][deetsKey][notes3] += 1
+        if len(exercises) > 1:
+            counts[habit][deetsKey]['training']['crunches'] += int(exercises[0])
+            counts[habit][deetsKey]['training']['push-ups'] += int(exercises[1])
+            counts[habit][deetsKey]['training']['lunges'] += int(exercises[2].split(' ')[0])
+
+            if len(exercises) >= 4 and exercises[3]:
+                counts[habit][deetsKey]['training']['planks'] += int(exercises[3].split('min')[0])
+
+            if len(exercises) >= 5 and exercises[4]:
+                spl = exercises[4].split(' ')
+                reps = int(spl[0])
+                exerciseKey = spl[1]
+                counts[habit][deetsKey]['training'][exerciseKey] += reps
+
+    if habit == 'S':
+        if 'time' not in counts[habit][deetsKey]:
+            counts[habit][deetsKey]['time'] = 0
+
+        counts[habit][deetsKey]['time'] += int(sub.split('min')[0]) * 60
+        
+
+    if habit == 'M':
+        if 'time' not in counts[habit][deetsKey]:
+            counts[habit][deetsKey]['time'] = 0
+
+        counts[habit][deetsKey]['time'] += int(notes2.split('min')[0]) * 60
+
+        if sub == 'PRN':
+            if notes3 not in counts[habit][deetsKey]:
+                counts[habit][deetsKey][notes3] = 0
+
+                counts[habit][deetsKey][notes3] += 1
 
     if day not in counts[habit][daysKey]:
         counts[habit][daysKey][day] = 0
@@ -222,7 +272,18 @@ counts['EAT'][deetsKey]['avg-per-month'] = counts['EAT'][deetsKey]['cost']/datet
 for habit in counts:
     # HEADER
     avg = round((daysSoFar * 1.0)/counts[habit][totalsKey], 2)
-    cprint("\n\n" + delim + habit + separator + " You have done this " + str(counts[habit]['total']) + " times this year. That's once every " + str(avg) + " days.\n", 'grey', 'on_white', attrs=['bold'])
+    isEx = habit == 'EX'
+    totalTimeSpent = ''
+
+    if 'time' in counts[habit][deetsKey] or isEx:
+        if isEx:
+            totalSecs = counts[habit][deetsKey]['training']['time'] + counts[habit][deetsKey]['runs']['time']
+        else: 
+            totalSecs = counts[habit][deetsKey]['time']
+
+        totalTimeSpent = calcTime(totalSecs)
+
+    cprint("\n\n" + delim + habit + separator + " You have done this " + str(counts[habit]['total']) + " times this year. That's once every " + str(avg) + " days." + totalTimeSpent + "\n", 'grey', 'on_white', attrs=['bold'])
 
     # SUBS
     header('subs')
@@ -234,7 +295,13 @@ for habit in counts:
     header('deets')
 
     for deet in counts[habit][deetsKey]:
-        print deet + ': ' + str(counts[habit][deetsKey][deet])
+        if deet in ['runs', 'training']:
+            print "\n" + deet + ': ' + str(counts[habit][deetsKey][deet]['total'])
+            for subDeet in counts[habit][deetsKey][deet]:
+                if subDeet != 'total':
+                    print '>>> ' + subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet])
+        else:
+            print deet + ': ' + str(counts[habit][deetsKey][deet])
 
     # TIME OF DAY
     header('time of day')
