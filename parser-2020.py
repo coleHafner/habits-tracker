@@ -111,6 +111,7 @@ totalMiles = 0
 totalRuns = 0
 milesRegex = re.compile('\d+\.?(\d+)?')
 intxTypeRegex = re.compile('^(\d)(.+)?')
+timedExercises = []
 
 for line in lines:
     if onFirstLine:
@@ -199,18 +200,21 @@ for line in lines:
             counts[habit][deetsKey]['training']['push-ups'] += int(exercises[1])
             counts[habit][deetsKey]['training']['lunges'] += int(exercises[2].split(' ')[0])
 
-            if len(exercises) >= 4 and exercises[3]:
-                counts[habit][deetsKey]['training']['planks'] += int(exercises[3].split('min')[0])
-
-            if len(exercises) >= 5 and exercises[4]:
-                spl = exercises[4].split(' ')
-                reps = int(spl[0])
+            for i in range(3, len(exercises)):
+                spl = exercises[i].split(' ')
+                repsOrMinsSplit = spl[0].split('min')
+                repsOrMins = int(repsOrMinsSplit[0])
                 exerciseKey = spl[1]
+
+                isTime = len(repsOrMinsSplit) > 1
+
+                if isTime: 
+                    timedExercises.append(exerciseKey)
 
                 if exerciseKey not in counts[habit][deetsKey]['training']:
                     counts[habit][deetsKey]['training'][exerciseKey] = 0
 
-                counts[habit][deetsKey]['training'][exerciseKey] += reps
+                counts[habit][deetsKey]['training'][exerciseKey] += repsOrMins
 
     if habit == 'S':
         if timeKey not in counts[habit][deetsKey]:
@@ -310,11 +314,11 @@ for habit in counts:
             
         if deet in ['runs', 'training']:
             print "\n" + deet + ': ' + str(counts[habit][deetsKey][deet]['total'])
-            for subDeet in counts[habit][deetsKey][deet]:
+            for subDeet in sorted(counts[habit][deetsKey][deet]):
                 if subDeet in ['total', timeKey]: 
                     continue;
                 suffix = ''
-                if subDeet == 'planks':
+                if subDeet in timedExercises:
                     suffix = ' mins'
                 print '>>> ' + subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet]) + suffix
         else:
