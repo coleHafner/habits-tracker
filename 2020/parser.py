@@ -383,5 +383,6 @@ for habit in counts:
 
         print prettyMonths[monthNum] + separator, monthCount
 
+debug("\ntotal records parsed: " + separator + " " + str(len(lines)))
 debug("total days in year" + separator + " " + str(daysSoFar))
 debug("file parsed" + separator + " " + filename + "\n")
