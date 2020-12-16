@@ -45,7 +45,11 @@ def newCounter(habit):
             }
         }
     elif habit == 'EAT':
-      counter[deetsKey] = {'cost': 0, 'avg': 0, 'avg-per-month': 0}
+      counter[deetsKey] = {
+          'cost': {'total': 0, 'avg': 0, 'avg-per-month': 0},
+          'restaraunts': {},
+          'genres': {}
+      }
 
     return counter
 
@@ -126,6 +130,7 @@ for line in lines:
     notes2 = parts[4].strip()
     notes3 = parts[5].strip()
     notes4 = parts[6].strip()
+    notes5 = parts[7].strip()
     
     dayAndTimeParts = dayAndTime.split(' ');
     day = cleanDay(dayAndTimeParts[0])
@@ -148,12 +153,25 @@ for line in lines:
         counts[habit][subsKey][sub][totalsKey] += 1
 
     if habit == 'EAT':
-        counts[habit][deetsKey]['cost'] += int(notes3)
-        counts[habit][deetsKey]['avg'] = round(counts[habit][deetsKey]['cost']/counts[habit][totalsKey], 2)
+        counts[habit][deetsKey]['cost']['total'] += int(notes3)
+        counts[habit][deetsKey]['cost']['avg'] = round(counts[habit][deetsKey]['cost']['total']/counts[habit][totalsKey], 2)
         if sub not in counts[habit][deetsKey]:
             counts[habit][deetsKey][sub] = 0
 
         counts[habit][deetsKey][sub] += 1
+
+        if notes2 not in counts[habit][deetsKey]['restaraunts']:
+            counts[habit][deetsKey]['restaraunts'][notes2] = {'total': 0, 'visits': 0}
+
+        counts[habit][deetsKey]['restaraunts'][notes2]['total'] += int(notes3)
+        counts[habit][deetsKey]['restaraunts'][notes2]['visits'] += 1
+
+        if notes5 not in counts[habit][deetsKey]['genres']:
+            counts[habit][deetsKey]['genres'][notes5] = {'total': 0, 'visits': 0}
+
+        counts[habit][deetsKey]['genres'][notes5]['total'] += int(notes3)
+        counts[habit][deetsKey]['genres'][notes5]['visits'] += 1
+
 
     if habit == 'INTX':
         split = notes2.split('/');
@@ -281,7 +299,7 @@ delim = "   "
 separator = ":"
 
 # calc avg spent on eating out per month
-counts['EAT'][deetsKey]['avg-per-month'] = counts['EAT'][deetsKey]['cost']/datetime.today().month;
+counts['EAT'][deetsKey]['cost']['avg-per-month'] = counts['EAT'][deetsKey]['cost']['total']/datetime.today().month;
 
 for habit in counts:
     # HEADER
@@ -316,13 +334,23 @@ for habit in counts:
             print "\n" + deet + ': ' + str(counts[habit][deetsKey][deet]['total'])
             for subDeet in sorted(counts[habit][deetsKey][deet]):
                 if subDeet in ['total', timeKey]: 
-                    continue;
+                    continue
                 suffix = ''
                 if subDeet in timedExercises:
                     suffix = ' mins'
                 print '>>> ' + subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet]) + suffix
+        elif deet in ['cost', 'restaraunts', 'genres']:
+            print "\n" + deet
+            if deet == 'cost':
+                for subDeet in sorted(counts[habit][deetsKey][deet]):
+                    print '>>> ' + subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet])
+            elif deet in ['restaraunts', 'genres']:
+                for subDeet in sorted(counts[habit][deetsKey][deet]):
+                    avg = round(((counts[habit][deetsKey][deet][subDeet]['total'] * 1.0)/counts[habit][deetsKey][deet][subDeet]['visits']), 2)
+                    print '>>> ' + subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet]['visits']) + ' --- ' + str(counts[habit][deetsKey][deet][subDeet]['total']) + ' --- ' + str(avg)
         else:
-            print deet + ': ' + str(counts[habit][deetsKey][deet])
+            if habit != 'EAT':
+                print deet + ': ' + str(counts[habit][deetsKey][deet])
 
     # TIME OF DAY
     header('time of day')
