@@ -93,7 +93,7 @@ def header(title):
 def debug(msg):
     cprint(msg, 'yellow')
 
-filename = './habits-2020.csv'
+filename = './habits.csv'
 debug("reading the file '" + filename + "'")
 
 file = open(filename, 'r')
