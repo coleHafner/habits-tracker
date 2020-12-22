@@ -355,13 +355,19 @@ for habit in counts:
                 print subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet]) + suffix
         elif deet in ['cost', 'restaraunts', 'genres']:
             cprint("\n" + deet.upper(), 'yellow')
+            cprint("PLACE" + ' '*32 + 'VISITS  TOTAL   AVG', 'yellow')
+            cprint('-'*70, 'yellow')
+
             if deet == 'cost':
                 for subDeet in sorted(counts[habit][deetsKey][deet]):
                     print subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet])
             elif deet in ['restaraunts', 'genres']:
                 for subDeet in sorted(counts[habit][deetsKey][deet]):
+                    spacerLen = 36 - len(subDeet)
+                    visitsSpacerLen = 8 - len(str(counts[habit][deetsKey][deet][subDeet]['visits']))
+                    totalSpacerLen = 8 - len(str(counts[habit][deetsKey][deet][subDeet]['total']))
                     avg = round(((counts[habit][deetsKey][deet][subDeet]['total'] * 1.0)/counts[habit][deetsKey][deet][subDeet]['visits']), 2)
-                    print subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet]['visits']) + ' --- ' + str(counts[habit][deetsKey][deet][subDeet]['total']) + ' --- ' + str(avg)
+                    print subDeet + ' '*spacerLen + ' ' + str(counts[habit][deetsKey][deet][subDeet]['visits']) + ' '*visitsSpacerLen + str(counts[habit][deetsKey][deet][subDeet]['total']) + ' '*totalSpacerLen + str(avg)
         else:
             if habit != 'EAT':
                 print deet + ': ' + str(counts[habit][deetsKey][deet])
