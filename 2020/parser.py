@@ -12,6 +12,7 @@ monthsKey = 'months'
 subsKey = 'subs'
 totalsKey = 'total'
 deetsKey = 'deets'
+costPerMonthKey = 'costPerMonth'
 
 def calcTime(totalSecs):
     hours = totalSecs/3600
@@ -20,7 +21,15 @@ def calcTime(totalSecs):
     return ' A Total of: ' + str(hours) + 'h ' + str(mins) + 'm ' + str(secs) + 's (' + str(totalSecs) + ' total seconds)'
 
 def newCounter(habit):
-    counter = {'total': 0, daysKey: {}, monthsKey: {}, timeKey: {}, subsKey: {}, deetsKey: {}}
+    counter = {
+        costPerMonthKey: {},
+        daysKey: {},
+        deetsKey: {},
+        monthsKey: {},
+        subsKey: {},
+        timeKey: {},
+        'total': 0,
+    }
 
     if habit == 'EX':
         counter[deetsKey] = {
@@ -34,19 +43,18 @@ def newCounter(habit):
             'training': {
                 'total': 0,
                 timeKey: 0,
-                'push-ups': 0,
                 'crunches': 0,
+                'push-ups': 0,
                 'lunges': 0,
-                'planks': 0,
-                'chin-ups': 0,
-                'curls': 0,
-                'shoulder-presses': 0,
-                'floor-presses': 0,
             }
         }
     elif habit == 'EAT':
       counter[deetsKey] = {
-          'cost': {'total': 0, 'avg': 0, 'avg-per-month': 0},
+          'cost': {
+              'total': 0,
+              'avg': 0,
+              'avg-per-month': 0
+            },
           'restaraunts': {},
           'genres': {}
       }
@@ -263,6 +271,12 @@ for line in lines:
 
     counts[habit][monthsKey][month] += 1
 
+    if habit == 'EAT':
+        if month not in counts[habit][costPerMonthKey]:
+            counts[habit][costPerMonthKey][month] = 0
+
+        counts[habit][costPerMonthKey][month] += int(notes3)
+
     timeOfDay = getTimeOfDay(time)
 
     if timeOfDay not in counts[habit][timeKey]:
@@ -331,23 +345,23 @@ for habit in counts:
             continue;
             
         if deet in ['runs', 'training']:
-            print "\n" + deet + ': ' + str(counts[habit][deetsKey][deet]['total'])
+            cprint("\n" + deet.upper() + ': ' + str(counts[habit][deetsKey][deet]['total']), 'yellow')
             for subDeet in sorted(counts[habit][deetsKey][deet]):
                 if subDeet in ['total', timeKey]: 
                     continue
                 suffix = ''
                 if subDeet in timedExercises:
                     suffix = ' mins'
-                print '>>> ' + subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet]) + suffix
+                print subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet]) + suffix
         elif deet in ['cost', 'restaraunts', 'genres']:
-            print "\n" + deet
+            cprint("\n" + deet.upper(), 'yellow')
             if deet == 'cost':
                 for subDeet in sorted(counts[habit][deetsKey][deet]):
-                    print '>>> ' + subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet])
+                    print subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet])
             elif deet in ['restaraunts', 'genres']:
                 for subDeet in sorted(counts[habit][deetsKey][deet]):
                     avg = round(((counts[habit][deetsKey][deet][subDeet]['total'] * 1.0)/counts[habit][deetsKey][deet][subDeet]['visits']), 2)
-                    print '>>> ' + subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet]['visits']) + ' --- ' + str(counts[habit][deetsKey][deet][subDeet]['total']) + ' --- ' + str(avg)
+                    print subDeet + ': ' + str(counts[habit][deetsKey][deet][subDeet]['visits']) + ' --- ' + str(counts[habit][deetsKey][deet][subDeet]['total']) + ' --- ' + str(avg)
         else:
             if habit != 'EAT':
                 print deet + ': ' + str(counts[habit][deetsKey][deet])
@@ -378,10 +392,15 @@ for habit in counts:
 
     for monthNum in range(1,13):
         monthCount = 0
+        costPerMonth = ""
+
         if (str(monthNum) in counts[habit][monthsKey]):
             monthCount = counts[habit][monthsKey][str(monthNum)]
 
-        print prettyMonths[monthNum] + separator, monthCount
+        if habit == 'EAT':
+            costPerMonth = "- total: " + str(counts[habit][costPerMonthKey][str(monthNum)])
+
+        print prettyMonths[monthNum] + separator, monthCount, costPerMonth
 
 debug("\ntotal records parsed: " + separator + " " + str(len(lines)))
 debug("total days in year" + separator + " " + str(daysSoFar))
